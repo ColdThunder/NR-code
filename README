@@ -1,0 +1,56 @@
+============================================================
+Credit to Yu Yu; Pen Ue-Li; Zhu Hong-Ming
+Based on Pen's MMH code 
+Ref: Pen, ApJS, 115, 19 (1998); Pen, ApJS, 100, 269 (1995)
+Subroutines are selected and arranged in Fortran90.
+Created at Oct 2016
+Last modified: Dec 2016
+
+===========================how to use=======================
+modify dimen.f90 to define the dimension.
+modify main.f90 to specify the input, and parameters.
+./CR.sh to compile and run
+
+or equivalently, configure the environment first, then
+make clean
+make
+./run
+
+=============================note===========================
+Make clean first, since there are pre-processing variables. 
+The input density field should have mean of 1.
+
+=================frequently used variables==================
+! file name variables
+character(256),parameter::workdir='/data/s2/yuyu22/testmmh/'
+character(8),parameter::zstring='0.000'
+character(64),parameter::inf='delta'
+character(64),parameter::idstring='s5'
+character(8),parameter::prefix='.bin'
+
+integer(4),parameter::niter=100
+
+! output switcher
+logical(4)::flag_def=.true.
+logical(4)::flag_gradient=.true.
+logical(4)::flag_density=.true.
+
+! restart
+logical(4)::restart=.false.
+integer(4)::restartstep=100
+
+==================directory and filename====================
+! input density field with mean of 1
+filename=trim(workdir)//trim(zstring)//trim(inf)//gstring//trim(prefix)
+
+! begin output deformation potential field   
+if (flag_defp) then
+  filename=trim(workdir)//trim(zstring)//'defp'//trim(idstring)//gstring//trim(prefix)
+
+!begin output gradient field
+if (flag_gradient) then
+  filename=trim(workdir)//trim(zstring)//'psix'//trim(idstring)//gstring//trim(prefix)
+
+! begin output reconstructed density field
+if (flag_density) then
+  filename=trim(workdir)//trim(zstring)//'recon'//trim(idstring)//gstring//trim(prefix)
