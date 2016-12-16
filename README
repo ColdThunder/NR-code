@@ -18,7 +18,17 @@ make
 
 =============================note===========================
 Make clean first, since there are pre-processing variables. 
+
 The input density field should have mean of 1.
+
+The reconstruction process can not deal with a lot of 
+empty grids.  Adopt other mass assginment to avoid this.
+
+The minimum value of rho may goes to negative after the 
+subroutine 'relaxing'.  Try to increase 'dtol' to
+decrease the change in each step.  The reconstruction 
+could handle a few isolated negative grids.  
+But if two many, it will diverge.
 
 =================frequently used variables==================
 ! file name variables
