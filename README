@@ -17,6 +17,9 @@ make
 ./run
 
 =============================note===========================
+set stacksize large enough, for the static array variables
+for example, ulimit -s unlimited
+
 Make clean first, since there are pre-processing variables. 
 
 The input density field should have mean of 1.
@@ -28,7 +31,7 @@ The minimum value of rho may goes to negative after the
 subroutine 'relaxing'.  Try to increase 'dtol' to
 decrease the change in each step.  The reconstruction 
 could handle a few isolated negative grids.  
-But if two many, it will diverge.
+But if too many, it will diverge.
 
 =================frequently used variables==================
 ! file name variables
