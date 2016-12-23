@@ -30,7 +30,7 @@ subroutine relaxing(u,def,defp,cmax,dt,nfluidcmp)
 ! be a small effect compared to the time integrator.
 !
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer nfluidcmp
 !
 ! both def and defp are defined at the half time step between the
@@ -268,7 +268,7 @@ endsubroutine relaxing
 !**********************************************************************
 subroutine dpv(res,u,vt,c,indxr, indxu, indxc, nfluid, ngu3, k)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer k, indxu(ng3), indxr(ng3), indxc(ng3), ngu3,nfluid
 real res(ng1,ng2,nfluid), u(nfluid,ng1,ng2,ngu3),&
      vt(ng1,ng2,nstore,3,nfluid), c(ng1,ng2,ncstore)
@@ -500,7 +500,7 @@ subroutine wphalfx(flx,u,v,nfluid)
 ! the result flx is one half cell offset to the right.  So
 ! flx(1)<->u(1.5)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer nfluid
 real u(ng1,ng2,nfluid),v(ng1,ng2,nfluid),flx(ng1,ng2,nfluid)
 !mydist u(*,block,*),v(*,block,*),flx(*,block,*)
@@ -551,7 +551,7 @@ subroutine wphalfy(flx,u,v,nfluid)
 ! the result flx is one half cell offset to the right.  So
 ! flx(1)<->u(1.5)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer nfluid
 real u(ng1,ng2,nfluid),v(ng1,ng2,nfluid),flx(ng1,ng2,nfluid)
 !mydist u(*,block,*),v(*,block,*),flx(*,block,*)
@@ -602,7 +602,7 @@ subroutine wphalfz(flz,u,v,nfluid)
 ! the result flx is one half cell offset to the right.  So
 ! flx(1)<->u(1.5)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer nfluid
 real u(5,nfluid,ng1,ng2),v(5,nfluid,ng1,ng2),flz(2,ng1,ng2,nfluid)
 !mydist u(*,*,*,block),v(*,*,*,block),flz(*,*,block,*)
@@ -773,7 +773,7 @@ end
 !**********************************************************************
 subroutine stepu(unew, uold, res, dt, indxunew,  ngul3, nfluidcmp, k)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer k, indxunew(ng3), ngul3, nfluidcmp
 real dt, unew(nfluidcmp,ng1,ng2,ngul3),& 
      uold(nfluidcmp,ng1,ng2,ng3), res(ng1,ng2,nfluidcmp)
@@ -809,7 +809,7 @@ endsubroutine stepu
 subroutine stepuu( u, res, dt, nfluidcmp, k)
 !
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer k, nfluidcmp
 real dt, u(nfluidcmp,ng1,ng2,ng3), res(ng1,ng2,nfluidcmp)
 !mydist u(*,*,block,*), res(*,block,*)
@@ -839,7 +839,7 @@ endsubroutine stepuu
 !**********************************************************************
 subroutine calcbaj(baj,def,indx,k)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 #ifdef GMETRIC
 include 'gmetric.fi'
 #endif
@@ -909,7 +909,7 @@ endsubroutine calcbaj
 !**********************************************************************
 subroutine flux(vt,defp,u,baj,indxb,indxu,nfluidcmp,ngu3,k)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer k, nfluidcmp, indxb(ng3),indxu(ng3),ngu3
 real vt(ng1,ng2,nstore,3,nfluidcmp),defp(ng1,ng2,ng3),&
      baj(7,ng1,ng2,nstore),u(nfluidcmp,ng1,ng2,ngu3),&
@@ -998,7 +998,7 @@ endsubroutine flux
 !**********************************************************************
 subroutine fluxeuler(vt,u,rootg,nfluidcomp,k)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer nfluidcomp, k
 real vt(3,nfluidcomp,ng1,ng2), u(nfluidcomp,ng1,ng2),rootg(ng1,ng2)
 !mydist vt(*,*,*,block),u(*,*,block),rootg(*,block)
@@ -1072,7 +1072,7 @@ subroutine cflkeuler(c,u,baj,defp,indxc,indx,k)
 ! to save on memory, we calculate the metric from scratch.
 !
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer k,indx(ng3),indxc(ng3)
 real c(ng1,ng2,ncstore),u(5,ng1,ng2,ng3),baj(7,ng1,ng2,nstore),defp(ng1,ng2,ng3)
 !mydist c(*,block,*),u(*,*,block,*),baj(*,*,block,*)

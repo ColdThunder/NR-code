@@ -613,12 +613,10 @@ do ko=1,2
                     -(phi(ip,jm,k)-phi(im,jm,k))*fudge(2,idxf(k),i,jm) &
                     +(phi(ip,jp,k)-phi(ip,jm,k))*fudge(2,idxf(k),ip,j) &
                     -(phi(im,jp,k)-phi(im,jm,k))*fudge(2,idxf(k),im,j) &
-                                                                       &
                     +(phi(i,jp,kp)-phi(i,jm,kp))*fudge(5,idxf(kp),i,j) &
                     -(phi(i,jp,km)-phi(i,jm,km))*fudge(5,idxf(km),i,j) &
                     +(phi(i,jp,kp)-phi(i,jp,km))*fudge(5,idxf(k),i,jp) &
                     -(phi(i,jm,kp)-phi(i,jm,km))*fudge(5,idxf(k),i,jm) &
-                                                                       &
                     +(phi(ip,j,kp)-phi(im,j,kp))*fudge(3,idxf(kp),i,j) &
                     -(phi(ip,j,km)-phi(im,j,km))*fudge(3,idxf(km),i,j) &
                     +(phi(ip,j,kp)-phi(ip,j,km))*fudge(3,idxf(k),ip,j) &

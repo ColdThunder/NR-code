@@ -67,3 +67,10 @@ if (flag_gradient) then
 ! begin output reconstructed density field
 if (flag_density) then
   filename=trim(workdir)//trim(zstring)//'recon'//trim(idstring)//gstring//trim(prefix)
+
+=========================gfortran==========================
+The default compiler is ifort.
+./CR_gfor.sh uses gfortran as compiler instead of ifort.
+It cleans all *.F90 first, then creat symbolic link 
+for all *.f90 file to *.F90
+It compiles with Makefile_gfortran

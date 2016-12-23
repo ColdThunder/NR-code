@@ -18,7 +18,7 @@ subroutine calcdefp(defp,tmp,tmp2,def,u,dtold1,dtaumesh,nfluid)
 ! assume that u(1,:,:,:) is the density field that we wish to keep
 ! constant.
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer nfluid
 real defp(ng1,ng2,ng3), def(ng1,ng2,ng3),u(nfluid,ng1,ng2,ng3),&
      tmp2(ng1+2,ng2,ng3),&
@@ -36,7 +36,7 @@ subroutine calcdefp1(defp,tmp,defplim,def,u,dtold1,dtaumesh,nfluid)
 ! assume that u(1,:,:,:) is the density field that we wish to keep
 ! constant.
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer nfluid
 real defp(ng1,ng2,ng3), def(ng1,ng2,ng3),u(nfluid,ng1,ng2,ng3),&
      tmp(ng1,ng2,ng3), dtold1, rhomin, rhomax,rms,dtaumesh
@@ -672,7 +672,7 @@ endsubroutine calcdefp1
 !*********************************************************************
 subroutine nsmooth(a)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 real a(ng1,ng2,ng3)
 ! locals
 real v(ng1,ng2,2), topa(ng1,ng2)
@@ -781,7 +781,7 @@ subroutine spreadmax(a,scale,ld1)
 ! goal: to expand the compression limiter regions 
 ! it replaces a with the maximum of a and scale*max(neighbors)
 implicit none
-#include 'relaxgl.f90'
+#include "relaxgl.f90"
 integer ld1
 real a(ld1,ng2,ng3),scale
 ! locals

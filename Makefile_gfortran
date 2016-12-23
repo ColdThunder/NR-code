@@ -1,0 +1,48 @@
+
+
+SOURCE= dimen.F90 gauss1.F90 main.F90 mg1024.F90 mg128.F90 mg16.F90 mg256.F90 mg32.F90 mg512.F90 mg64.F90 mg8.F90 mgutil.F90 multigrid.F90 relaxgl.F90 relaxing.F90 limiter.F90 mytools.F90
+
+FPP= -Wp,-DCOLD,-DOMPTIME
+
+OPT= -fopenmp -w
+
+FC= gfortran 
+
+run:gauss1.o main.o mgutil.o multigrid.o recipes12.o gradient.o reconstruct.o relaxing.o limiter.o mytools.o fft.o
+	$(FC) $^ -o $@ $(FPP) $(OPT)
+
+gauss1.o:gauss1.F90 dimen.F90 relaxgl.F90
+	$(FC)  -c   $< $(FPP) $(OPT)
+
+main.o:main.F90 dimen.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+mgutil.o:mgutil.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+relaxing.o:relaxing.F90 relaxgl.F90 cold.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+limiter.o:limiter.F90 relaxgl.F90 dimen.F90 globalpa.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+multigrid.o:multigrid.F90 dimen.F90 mg8.F90 mg16.F90 mg32.F90 mg64.F90 mg128.F90 mg256.F90 mg512.F90 mg1024.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+recipes12.o:recipes12.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+gradient.o:gradient.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+reconstruct.o:reconstruct.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+mytools.o:mytools.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+fft.o:fft.F90
+	$(FC) -c   $< $(FPP) $(OPT) -o fft.o 
+
+clean:
+	rm -rf *.o run
