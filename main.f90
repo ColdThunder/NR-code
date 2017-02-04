@@ -8,9 +8,22 @@ character(256),parameter::workdir='/data/s2/yuyu22/testgit/'
 character(8),parameter::zstring='0.000'
 character(64),parameter::inf='den'
 character(64),parameter::idstring='_i100_'
-character(8),parameter::prefix='.bin'
+character(8),parameter::suffix='.bin'
 
 integer(4),parameter::niter=100
+
+! choose input
+logical(4)::inputdensity=.true.
+logical(4)::inputposition=.false.
+! restart
+logical(4)::restart=.false.
+integer(4)::restartstep=100
+character(10)::rstring_u='restartu'
+character(10)::rstring_d='restartdef'
+character(4)::sstring
+
+! choose mode
+logical(4)::regrid=.false.
 
 ! parameters
 real(4),parameter::cmpmax=10.
@@ -18,6 +31,10 @@ real(4),parameter::dtol=1.
 real(4),parameter::dtaumesh=1.
 real(4),parameter::cmax=1.
 real(4),parameter::dt=1.
+
+integer(4),parameter::npmax=10000000
+integer(4)::np
+real(4)::pos(3,npmax)
 
 integer(4),parameter::ng1=NG
 integer(4),parameter::ng2=NG
@@ -27,21 +44,15 @@ real(4)::defp(ng1,ng2,ng3), def(ng1,ng2,ng3),u(nfluid,ng1,ng2,ng3),tmp(ng1,ng2,n
 real(4)::grad(ng1,ng2,ng3,3)
 real(4)::delta(ng1,ng2,ng3)
 real(4)::umean
-integer(4) i,j,k
-character(4)::gstring
-character(512)::filename
 ! output switcher
 logical(4)::flag_def=.false. ! output displacement potential at final
 logical(4)::flag_gradient=.false. ! output reconstructed displacement field at final
 logical(4)::flag_density=.true. ! output reconstructed density at final
 logical(4)::flag_check=.true.  ! write down checkpoint after last iteration
-! restart
-logical(4)::restart=.false.
-integer(4)::restartstep=100
-character(10)::rstring_u='restartu'
-character(10)::rstring_d='restartdef'
-character(4)::sstring
 ! misc
+integer(4) i,j,k
+character(4)::gstring
+character(512)::filename
 integer(4)::iter,begin
 real(8)::ompt1,ompt2
 real(4)::t1,t2
@@ -57,37 +68,20 @@ write(*,*) 'BEGIN'
 
 compressmax=cmpmax
 u=0.
-! input density field with mean of 1
-call cpu_time(t1)
-filename=trim(workdir)//trim(zstring)//trim(inf)//gstring//trim(prefix)
-write(*,*) 'reading: ',trim(filename)
-open(31,file=filename,status='old',access='stream')
-read(31) u(1,:,:,:)
-close(31)
-call cpu_time(t2)
-write(*,*) 'time consumed for reading:',t2-t1,'seconds'
-
-write(*,*) ' '
-write(*,*) 'u:'
-umean=sum(real(u(1,:,:,:),8))/float(ng1)/float(ng2)/float(ng3)
-!call calcmean(u(1,:,:,:),umean,ng1,ng2,ng3,'u')
-if (abs(umean-1.).gt.1.e-5) then
-  write(*,*) 'umean should be zero, program ended'
-  stop
-endif
-write(*,*) 'u mean=',real(sum(real(u(1,:,:,:),8))/float(ng1)/float(ng2)/float(ng3))
-write(*,*) 'u sigma=',real(sqrt(sum(real((u(1,:,:,:)-1.)**2,8))/float(ng1)/float(ng2)/float(ng3)))
-write(*,*) 'u min, max=',minval(u(1,:,:,:)),maxval(u(1,:,:,:))
-
-write(*,*) ' '
-write(*,*) 'BEGIN MULTIGRID'
 def=0.
 begin=1
 ! restart
 if (restart) then
-   begin=restartstep+1
-   call readrestart
+  begin=restartstep+1
+  call readrestart
+  if (regrid) call readposition
+else
+  if (inputdensity) call readdensity
+  if (inputposition) call readposition
+  if (inputposition) call voronoi(pos,np,u(1,:,:,:),NG)
 endif
+write(*,*) ' '
+write(*,*) 'BEGIN MAIN LOOP'
 ! main loop
 do iter=begin,niter
   call cpu_time(t1)
@@ -116,7 +110,7 @@ do iter=begin,niter
 enddo
 ! end of main loop
 if (flag_check) call checkpoint
-write(*,*) 'END MULTIGRID'
+write(*,*) 'END MAIN LOOP'
 
 write(*,*) ' '
 write(*,*) 'def:'
@@ -125,7 +119,7 @@ write(*,*) 'sigma=',sqrt(real(sum(real(def**2,8))/float(ng1)/float(ng2)/float(ng
 
 !begin output deformation potential field
 if (flag_def) then
-  filename=trim(workdir)//trim(zstring)//'def'//trim(idstring)//gstring//trim(prefix)
+  filename=trim(workdir)//trim(zstring)//'def'//trim(idstring)//gstring//trim(suffix)
   write(*,*) 'writing: ',trim(filename)
   open(31,file=filename,status='replace',access='stream')
   write(31) def
@@ -138,19 +132,19 @@ if (flag_gradient) then
   call cpu_time(t1)
   call scalar2gradient(def,grad,(/ng1,ng2,ng3/))
 
-  filename=trim(workdir)//trim(zstring)//'psix'//trim(idstring)//gstring//trim(prefix)
+  filename=trim(workdir)//trim(zstring)//'psix'//trim(idstring)//gstring//trim(suffix)
   write(*,*) 'writing: ',trim(filename)
   open(31,file=filename,status='replace',access='stream')
   write(31) grad(:,:,:,1)
   close(31)
 
-  filename=trim(workdir)//trim(zstring)//'psiy'//trim(idstring)//gstring//trim(prefix)
+  filename=trim(workdir)//trim(zstring)//'psiy'//trim(idstring)//gstring//trim(suffix)
   write(*,*) 'writing: ',trim(filename)
   open(31,file=filename,status='replace',access='stream')
   write(31) grad(:,:,:,2)
   close(31)
 
-  filename=trim(workdir)//trim(zstring)//'psiz'//trim(idstring)//gstring//trim(prefix)
+  filename=trim(workdir)//trim(zstring)//'psiz'//trim(idstring)//gstring//trim(suffix)
   write(*,*) 'writing: ',trim(filename)
   open(31,file=filename,status='replace',access='stream')
   write(31) grad(:,:,:,3)
@@ -166,7 +160,7 @@ if (flag_density) then
   call cpu_time(t1)
   call defp2delta(def,delta,(/ng1,ng2,ng3/))
 
-  filename=trim(workdir)//trim(zstring)//'recon'//trim(idstring)//gstring//trim(prefix)
+  filename=trim(workdir)//trim(zstring)//'recon'//trim(idstring)//gstring//trim(suffix)
   write(*,*) 'writing: ',trim(filename)
   open(31,file=filename,status='replace',access='stream')
   write(31) delta(:,:,:)
@@ -188,12 +182,12 @@ implicit none
 write(*,*) ' '
 write(*,*) 'RESTART!'
 write(sstring,'(i4.4)') restartstep
-filename=trim(workdir)//trim(zstring)//trim(rstring_u)//sstring//'-'//gstring//trim(prefix)
+filename=trim(workdir)//trim(zstring)//trim(rstring_u)//sstring//'-'//gstring//trim(suffix)
 write(*,*) 'reading: ',trim(filename)
 open(31,file=filename,status='old',access='stream')
 read(31) u(1,:,:,:)
 close(31)
-filename=trim(workdir)//trim(zstring)//trim(rstring_d)//sstring//'-'//gstring//trim(prefix)
+filename=trim(workdir)//trim(zstring)//trim(rstring_d)//sstring//'-'//gstring//trim(suffix)
 write(*,*) 'reading: ',trim(filename)
 open(31,file=filename,status='old',access='stream')
 read(31) def
@@ -207,16 +201,58 @@ implicit none
 write(*,*) ' '
 write(*,*) 'CHECKPOINT!'
 write(sstring,'(i4.4)') niter
-filename=trim(workdir)//trim(zstring)//trim(rstring_u)//sstring//'-'//gstring//trim(prefix)
+filename=trim(workdir)//trim(zstring)//trim(rstring_u)//sstring//'-'//gstring//trim(suffix)
 write(*,*) 'reading: ',trim(filename)
 open(31,file=filename,status='replace',access='stream')
 write(31) u(1,:,:,:)
 close(31)
-filename=trim(workdir)//trim(zstring)//trim(rstring_d)//sstring//'-'//gstring//trim(prefix)
+filename=trim(workdir)//trim(zstring)//trim(rstring_d)//sstring//'-'//gstring//trim(suffix)
 write(*,*) 'reading: ',trim(filename)
 open(31,file=filename,status='replace',access='stream')
 write(31) def
 close(31)
 endsubroutine checkpoint
+
+subroutine readdensity
+implicit none
+! input density field with mean of 1
+call cpu_time(t1)
+filename=trim(workdir)//trim(zstring)//trim(inf)//gstring//trim(suffix)
+write(*,*) 'reading: ',trim(filename)
+open(31,file=filename,status='old',access='stream')
+read(31) u(1,:,:,:)
+close(31)
+call cpu_time(t2)
+write(*,*) 'time consumed for reading:',t2-t1,'seconds'
+
+write(*,*) ' '
+write(*,*) 'u:'
+umean=sum(real(u(1,:,:,:),8))/float(ng1)/float(ng2)/float(ng3)
+!call calcmean(u(1,:,:,:),umean,ng1,ng2,ng3,'u')
+if (abs(umean-1.).gt.1.e-5) then
+  write(*,*) 'umean should be zero, program ended'
+  stop
+endif
+write(*,*) 'u mean=',real(sum(real(u(1,:,:,:),8))/float(ng1)/float(ng2)/float(ng3))
+write(*,*) 'u sigma=',real(sqrt(sum(real((u(1,:,:,:)-1.)**2,8))/float(ng1)/float(ng2)/float(ng3)))
+write(*,*) 'u min, max=',minval(u(1,:,:,:)),maxval(u(1,:,:,:))
+endsubroutine readdensity
+
+subroutine readposition
+implicit none
+real(4)::box(6)
+call cpu_time(t1)
+filename=trim(workdir)//trim(zstring)//trim(inf)//gstring//trim(suffix)
+write(*,*) 'reading: ',trim(filename)
+open(31,file=filename,status='old',access='stream')
+read(31) np
+read(31) box(1:6)
+read(31) pos(1:3,1:np)
+close(31)
+pos(1,:)=(pos(1,:)-box(1))/(box(2)-box(1))
+pos(2,:)=(pos(2,:)-box(3))/(box(4)-box(3))
+pos(3,:)=(pos(3,:)-box(5))/(box(6)-box(5))
+where(pos.eq.0.) pos=pos+1.
+endsubroutine readposition
 
 endprogram main
