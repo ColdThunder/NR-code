@@ -18,12 +18,14 @@ logical(4)::inputposition=.true.
 character(64),parameter::infpos='pos'
           ! inputposition will overwrite the input density
           ! inputposition is required by regrid process
+
 ! restart
 logical(4)::restart=.false.
 integer(4)::restartstep=100
 character(10)::rstring_u='restartu'
 character(10)::rstring_d='restartdef'
 character(4)::sstring
+
 ! output switcher
 logical(4)::flag_def=.false. ! output displacement potential at final
 logical(4)::flag_gradient=.false. ! output reconstructed displacement field at final
