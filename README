@@ -4,7 +4,7 @@ Based on Pen's MMH code
 Ref: Pen, ApJS, 115, 19 (1998); Pen, ApJS, 100, 269 (1995)
 Subroutines are selected and arranged in Fortran90.
 Created at Oct 2016
-Last modified: Dec 2016
+Last modified: Feb 2017
 
 ===========================how to use=======================
 modify dimen.f90 to define the dimension.
@@ -27,6 +27,9 @@ The input density field should have mean of 1.
 The reconstruction process can not deal with a lot of 
 empty grids.  Adopt other mass assginment to avoid this.
 
+If input position data, it will overwrite the input density
+data by Voronoi mass-assignment.
+
 The minimum value of rho may goes to negative after the 
 subroutine 'relaxing'.  Try to increase 'dtol' to
 decrease the change in each step.  The reconstruction 
@@ -37,36 +40,51 @@ But if too many, it will diverge.
 ! file name variables
 character(256),parameter::workdir='/data/s2/yuyu22/testmmh/'
 character(8),parameter::zstring='0.000'
-character(64),parameter::inf='delta'
-character(64),parameter::idstring='s5'
-character(8),parameter::prefix='.bin'
+character(8),parameter::suffix='.bin'
+
+! input switcher
+logical(4)::inputdensity=.true.
+character(64),parameter::infden='delta'
+logical(4)::inputposition=.true.
+character(64),parameter::infpos='delta'
 
 integer(4),parameter::niter=100
+character(64),parameter::idstring='_i100_'
+
+! restart
+logical(4)::restart=.false.
+integer(4)::restartstep=100
 
 ! output switcher
 logical(4)::flag_def=.true.
 logical(4)::flag_gradient=.true.
 logical(4)::flag_density=.true.
 
-! restart
-logical(4)::restart=.false.
-integer(4)::restartstep=100
+! regrid process
+logical(4),parameter::regrid_mode=.true.
+integer(4),parameter::regridfrequency=10
+
+! parameters
+real(4),parameter::dtol=3.
 
 ==================directory and filename====================
 ! input density field with mean of 1
-filename=trim(workdir)//trim(zstring)//trim(inf)//gstring//trim(prefix)
+filename=trim(workdir)//trim(zstring)//trim(infden)//gstring//trim(suffix)
+
+! or input position data
+filename=trim(workdir)//trim(zstring)//trim(infpos)//gstring//trim(suffix)
 
 ! begin output deformation potential field   
 if (flag_defp) then
-  filename=trim(workdir)//trim(zstring)//'defp'//trim(idstring)//gstring//trim(prefix)
+  filename=trim(workdir)//trim(zstring)//'defp'//trim(idstring)//gstring//trim(suffix)
 
 !begin output gradient field
 if (flag_gradient) then
-  filename=trim(workdir)//trim(zstring)//'psix'//trim(idstring)//gstring//trim(prefix)
+  filename=trim(workdir)//trim(zstring)//'psix'//trim(idstring)//gstring//trim(suffix)
 
 ! begin output reconstructed density field
 if (flag_density) then
-  filename=trim(workdir)//trim(zstring)//'recon'//trim(idstring)//gstring//trim(prefix)
+  filename=trim(workdir)//trim(zstring)//'recon'//trim(idstring)//gstring//trim(suffix)
 
 =========================gfortran==========================
 The default compiler is ifort.
