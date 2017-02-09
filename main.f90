@@ -6,36 +6,49 @@ implicit none
 character(256),parameter::workdir='/data/s2/yuyu22/testgit/'
 ! file name variables
 character(8),parameter::zstring='0.000'
-character(64),parameter::inf='den'
-character(64),parameter::idstring='_i100_'
 character(8),parameter::suffix='.bin'
 
 integer(4),parameter::niter=100
+character(64),parameter::idstring='_i100_'
 
-! choose input
+! input switcher
 logical(4)::inputdensity=.true.
-logical(4)::inputposition=.false.
+character(64),parameter::infden='den'
+logical(4)::inputposition=.true.
+character(64),parameter::infpos='pos'
+          ! inputposition will overwrite the input density
+          ! inputposition is required by regrid process
 ! restart
 logical(4)::restart=.false.
 integer(4)::restartstep=100
 character(10)::rstring_u='restartu'
 character(10)::rstring_d='restartdef'
 character(4)::sstring
+! output switcher
+logical(4)::flag_def=.false. ! output displacement potential at final
+logical(4)::flag_gradient=.false. ! output reconstructed displacement field at final
+logical(4)::flag_density=.true. ! output reconstructed density at final
+logical(4)::flag_check=.true.  ! write down checkpoint after last iteration
 
-! choose mode
-logical(4)::regrid=.false.
+! regrid process
+logical(4),parameter::regrid_mode=.true.
+integer(4),parameter::regridfrequency=10
+logical(4)::regridcondition=.false.
 
 ! parameters
 real(4),parameter::cmpmax=10.
-real(4),parameter::dtol=1.
+real(4),parameter::dtol=3.
 real(4),parameter::dtaumesh=1.
 real(4),parameter::cmax=1.
 real(4),parameter::dt=1.
 
-integer(4),parameter::npmax=10000000
+! halo variables
+integer(4),parameter::npmax=10000000 ! estimated halo number for static memo
 integer(4)::np
 real(4)::pos(3,npmax)
+real(4)::newpos(3,npmax)
 
+! multigrid variables
 integer(4),parameter::ng1=NG
 integer(4),parameter::ng2=NG
 integer(4),parameter::ng3=NG
@@ -44,11 +57,6 @@ real(4)::defp(ng1,ng2,ng3), def(ng1,ng2,ng3),u(nfluid,ng1,ng2,ng3),tmp(ng1,ng2,n
 real(4)::grad(ng1,ng2,ng3,3)
 real(4)::delta(ng1,ng2,ng3)
 real(4)::umean
-! output switcher
-logical(4)::flag_def=.false. ! output displacement potential at final
-logical(4)::flag_gradient=.false. ! output reconstructed displacement field at final
-logical(4)::flag_density=.true. ! output reconstructed density at final
-logical(4)::flag_check=.true.  ! write down checkpoint after last iteration
 ! misc
 integer(4) i,j,k
 character(4)::gstring
@@ -59,12 +67,17 @@ real(4)::t1,t2
 real(4)::rdummy
 include 'globalpa.f90'
 
+write(*,*) ' '
+write(*,*) 'BEGIN'
+if (regrid_mode) then
+  write(*,*) ' '
+  write(*,*) 'REGRID mode ON!'
+  write(*,*) 'regrid every',regridfrequency,'steps'
+endif
+
 ! grid issues
 write(gstring,'(i4.4)') NG
 write(*,*) 'grid:',NG
-
-write(*,*) ' '
-write(*,*) 'BEGIN'
 
 compressmax=cmpmax
 u=0.
@@ -74,12 +87,14 @@ begin=1
 if (restart) then
   begin=restartstep+1
   call readrestart
-  if (regrid) call readposition
+  if (regrid_mode) call readposition
 else
   if (inputdensity) call readdensity
+  if (regrid_mode) inputposition=.true.
   if (inputposition) call readposition
   if (inputposition) call voronoi(pos,np,u(1,:,:,:),NG)
 endif
+
 write(*,*) ' '
 write(*,*) 'BEGIN MAIN LOOP'
 ! main loop
@@ -107,6 +122,14 @@ do iter=begin,niter
   ompt2=omp_get_wtime()
   write(*,*) 'real time consumed for one iteration:',ompt2-ompt1,'seconds'
   write(*,*) 'cpu time consumed for one iteration:',t2-t1,'seconds'
+
+  ! regrid process
+  if (mod(iter,regridfrequency).eq.0) regridcondition=.true.
+  if (regrid_mode .and. regridcondition) then
+    call regrid(pos,np,def,NG,newpos)
+    call voronoi(newpos,np,u(1,:,:,:),NG)
+    regridcondition=.false.
+  endif
 enddo
 ! end of main loop
 if (flag_check) call checkpoint
@@ -216,8 +239,9 @@ endsubroutine checkpoint
 subroutine readdensity
 implicit none
 ! input density field with mean of 1
+write(*,*) ' '
 call cpu_time(t1)
-filename=trim(workdir)//trim(zstring)//trim(inf)//gstring//trim(suffix)
+filename=trim(workdir)//trim(zstring)//trim(infden)//gstring//trim(suffix)
 write(*,*) 'reading: ',trim(filename)
 open(31,file=filename,status='old',access='stream')
 read(31) u(1,:,:,:)
@@ -242,17 +266,19 @@ subroutine readposition
 implicit none
 real(4)::box(6)
 call cpu_time(t1)
-filename=trim(workdir)//trim(zstring)//trim(inf)//gstring//trim(suffix)
+write(*,*) ' '
+filename=trim(workdir)//trim(zstring)//trim(infpos)//gstring//trim(suffix)
 write(*,*) 'reading: ',trim(filename)
 open(31,file=filename,status='old',access='stream')
 read(31) np
+write(*,*) 'particle number:',np
 read(31) box(1:6)
 read(31) pos(1:3,1:np)
 close(31)
-pos(1,:)=(pos(1,:)-box(1))/(box(2)-box(1))
-pos(2,:)=(pos(2,:)-box(3))/(box(4)-box(3))
-pos(3,:)=(pos(3,:)-box(5))/(box(6)-box(5))
-where(pos.eq.0.) pos=pos+1.
+pos(1,:)=(pos(1,:)-box(1))/(box(2)-box(1))*ng1
+pos(2,:)=(pos(2,:)-box(3))/(box(4)-box(3))*ng2
+pos(3,:)=(pos(3,:)-box(5))/(box(6)-box(5))*ng3
+where(pos.eq.0.) pos=pos+NG
 endsubroutine readposition
 
 endprogram main

@@ -38,7 +38,16 @@ gradient.o:gradient.F90
 reconstruct.o:reconstruct.F90
 	$(FC) -c   $< $(FPP) $(OPT)
 
+voronoi.o:voronoi.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+regrid.o:regrid.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
 mytools.o:mytools.F90
+	$(FC) -c   $< $(FPP) $(OPT)
+
+recipes08.o:recipes08.F90
 	$(FC) -c   $< $(FPP) $(OPT)
 
 fft.o:fft.F90

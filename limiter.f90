@@ -402,6 +402,7 @@ do k=1,ng3
    enddo
 enddo
 !$omp end parallel
+
 ! multigrid will call rgzerosum...
 !
 ! the +32 indicates to use the current value as initial guess.

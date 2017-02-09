@@ -8,7 +8,7 @@ OPT= -openmp -openmp-report
 
 FC=ifort -mcmodel=large
 
-run:gauss1.o main.o mgutil.o multigrid.o recipes12.o gradient.o voronoi.o reconstruct.o relaxing.o limiter.o mytools.o fft.o
+run:gauss1.o main.o mgutil.o multigrid.o recipes12.o gradient.o voronoi.o regrid.o reconstruct.o relaxing.o limiter.o mytools.o recipes08.o fft.o
 	$(FC) $^ -o $@ $(FPP) $(OPT)
 
 gauss1.o:gauss1.f90 dimen.f90 relaxgl.f90
@@ -41,7 +41,13 @@ reconstruct.o:reconstruct.f90
 voronoi.o:voronoi.f90
 	$(FC) -c -fpp $< $(FPP) $(OPT)
 
+regrid.o:regrid.f90
+	$(FC) -c -fpp $< $(FPP) $(OPT)
+
 mytools.o:mytools.f90
+	$(FC) -c -fpp $< $(FPP) $(OPT)
+
+recipes08.o:recipes08.f90
 	$(FC) -c -fpp $< $(FPP) $(OPT)
 
 fft.o:fft.f90
